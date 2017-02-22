@@ -240,7 +240,7 @@ private[spark] object JsonProtocol {
       ("Task ID" -> taskId) ~
       ("Stage ID" -> stageId) ~
       ("Stage Attempt ID" -> stageAttemptId) ~
-      ("Accumulator Updates" -> JArray(updates.map(accumulableInfoToJson).toList))
+      ("Accumulator Updates" -> JArray(accumulablesToJson(updates)))
     })
   }
 
@@ -264,8 +264,7 @@ private[spark] object JsonProtocol {
     ("Submission Time" -> submissionTime) ~
     ("Completion Time" -> completionTime) ~
     ("Failure Reason" -> failureReason) ~
-    ("Accumulables" -> JArray(
-      stageInfo.accumulables.values.map(accumulableInfoToJson).toList))
+    ("Accumulables" -> JArray(accumulablesToJson(stageInfo.accumulables.values)))
   }
 
   def taskInfoToJson(taskInfo: TaskInfo): JValue = {
@@ -281,7 +280,7 @@ private[spark] object JsonProtocol {
     ("Finish Time" -> taskInfo.finishTime) ~
     ("Failed" -> taskInfo.failed) ~
     ("Killed" -> taskInfo.killed) ~
-    ("Accumulables" -> JArray(taskInfo.accumulables.toList.map(accumulableInfoToJson)))
+    ("Accumulables" -> JArray(accumulablesToJson(taskInfo.accumulables)))
   }
 
   def accumulableInfoToJson(accumulableInfo: AccumulableInfo): JValue = {
@@ -293,6 +292,10 @@ private[spark] object JsonProtocol {
     ("Internal" -> accumulableInfo.internal) ~
     ("Count Failed Values" -> accumulableInfo.countFailedValues) ~
     ("Metadata" -> accumulableInfo.metadata)
+  }
+
+  def accumulablesToJson(accumulables: Iterable[AccumulableInfo]): List[JValue] = {
+    accumulables.filter(p => !p.internal).map(accumulableInfoToJson).toList
   }
 
   /**
@@ -359,8 +362,7 @@ private[spark] object JsonProtocol {
     ("Shuffle Read Metrics" -> shuffleReadMetrics) ~
     ("Shuffle Write Metrics" -> shuffleWriteMetrics) ~
     ("Input Metrics" -> inputMetrics) ~
-    ("Output Metrics" -> outputMetrics) ~
-    ("Updated Blocks" -> updatedBlocks)
+    ("Output Metrics" -> outputMetrics)
   }
 
   def taskEndReasonToJson(taskEndReason: TaskEndReason): JValue = {
